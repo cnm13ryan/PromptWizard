@@ -19,16 +19,22 @@ from .llm_settings import (
 
 logger = get_glue_logger(__name__)
 
-def dict_to_chat_messages(messages_dict: Dict) -> List[ChatMessage]:
+def dict_to_chat_messages(messages_data) -> List[ChatMessage]:
     """
     Convert a dictionary of messages (e.g. {"messages": [{"role": "user", "content": "..."}]})
     into a list of ChatMessage objects from llama_index.
     """
-    if "messages" not in messages_dict:
-        raise ValueError("Expected 'messages' key in the dictionary.")
+    if isinstance(messages_data, dict):
+        if "messages" not in messages_data:
+            raise ValueError("Expected 'messages' key in the dictionary.")
+        raw_msgs = messages_data["messages"]
+    elif isinstance(messages_data, list):
+        raw_msgs = messages_data
+    else:
+        raise ValueError("Expected a list or dict for messages.")
 
     chat_messages = []
-    for msg in messages_dict["messages"]:
+    for msg in raw_msgs:
         role_str = msg.get("role", "user").lower()
         if role_str == "assistant":
             role = MessageRole.ASSISTANT
