@@ -138,10 +138,7 @@ class LLMMgr:
     def chat_completion(messages: Dict) -> str:
         llm_handle = get_model_type()
         try:
-            if llm_handle == "AzureOpenAI":
-                return env_based_chat_completion(messages)
-            elif llm_handle == "LLamaAML":
-                return "Some placeholder"
+            return env_based_chat_completion(messages)
         except Exception as e:
             return LLMMgr._handle_llm_error(e, llm_handle, messages)
         
