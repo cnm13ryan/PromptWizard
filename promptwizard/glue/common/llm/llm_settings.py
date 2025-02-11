@@ -53,6 +53,21 @@ def get_azure_config() -> dict:
         "temperature": temperature,
     }
 
+def get_ollama_config() -> dict:
+    """
+    Retrieve config for Ollama-based calls from environment variables or defaults.
+    For example, you might have:
+      OLLAMA_BASE_URL, OLLAMA_MODEL, OLLAMA_TEMPERATURE, etc.
+    """
+    base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+    model_name = os.environ.get("OLLAMA_MODEL", "llama2")
+    temperature = float(os.environ.get("OLLAMA_TEMPERATURE", "0.75"))
+
+    return {
+        "base_url": base_url,
+        "model_name": model_name,
+        "temperature": temperature
+    }
 
 def get_model_type() -> str:
     """
