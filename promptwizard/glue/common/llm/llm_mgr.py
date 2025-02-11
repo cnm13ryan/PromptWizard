@@ -72,6 +72,8 @@ def get_chat_completion_from_env(messages):
     return _call_openai_api(messages) if use_openai_api_key() else _call_azure_api(messages)
 
 class LLMMgr:
+
+    @staticmethod
     def _handle_llm_error(e: Exception, provider_name: str, messages: Dict) -> str:
         logger.error(f"Exception with {provider_name} on messages {messages}: {e}")
         return "Sorry, I am not able to understand your query. Please try again."
@@ -85,7 +87,7 @@ class LLMMgr:
             elif llm_handle == "LLamaAML":
                 return "Some placeholder"
         except Exception as e:
-            return _handle_llm_error(e, llm_handle, messages)
+            return LLMMgr._handle_llm_error(e, llm_handle, messages)
         
 
     @staticmethod
