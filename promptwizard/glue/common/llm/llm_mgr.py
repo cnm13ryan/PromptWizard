@@ -137,6 +137,21 @@ class LLMMgr:
         :return: Dict key=unique_model_id of LLM, value=Object of class llama_index.core.llms.LLM
         which can be used as handle to that LLM
         """
+
+        def maybe_add_token_counter(track_tokens: bool, model_name: str):
+            """
+            If track_tokens is True, returns a CallbackManager with TokenCountingHandler.
+            Otherwise, returns None.
+            """
+            if not track_tokens:
+                return None
+            token_counter = TokenCountingHandler(
+                tokenizer=tiktoken.encoding_for_model(model_name).encode
+            )
+            mgr = CallbackManager([token_counter])
+            token_counter.reset_counts()
+            return mgr
+
         llm_pool = {}
         az_llm_config = llm_config.azure_open_ai
 
@@ -160,14 +175,11 @@ class LLMMgr:
 
             for azure_oai_model in az_llm_config.azure_oai_models:
                 callback_mgr = None
-                if azure_oai_model.track_tokens:
-                    
-                    # If we need to count number of tokens used in LLM calls
-                    token_counter = TokenCountingHandler(
-                        tokenizer=tiktoken.encoding_for_model(azure_oai_model.model_name_in_azure).encode
-                        )
-                    callback_mgr = CallbackManager([token_counter])
-                    token_counter.reset_counts()
+
+                callback_mgr = maybe_add_token_counter(
+                    track_tokens=azure_oai_model.track_tokens,
+                    model_name=azure_oai_model.model_name_in_azure
+                )
 
                 if azure_oai_model.model_type in [LLMOutputTypes.CHAT, LLMOutputTypes.COMPLETION]:
                     llm_pool[azure_oai_model.unique_model_id] = \
