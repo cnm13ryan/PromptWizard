@@ -44,25 +44,23 @@ def _call_azure_api(messages):
     )
     return response.choices[0].message.content
 
-def call_api(messages):
-    """Decide which provider to use based on environment variables."""
+def get_chat_completion_from_env(messages):
+    """
+    Returns LLM chat completion based on environment variables.
+    If USE_OPENAI_API_KEY=True, calls OpenAI. Otherwise calls Azure OpenAI.
+    """
     use_openai_api_key = os.environ.get('USE_OPENAI_API_KEY', 'False')
-    if use_openai_api_key == "True":
-        return _call_openai_api(messages)
-    else:
-        return _call_azure_api(messages)
+    return _call_openai_api(messages) if use_openai_api_key == "True" else _call_azure_api(messages)
 
 class LLMMgr:
     @staticmethod
-    def chat_completion(messages: Dict):
+    def chat_completion(messages: Dict) -> str:
         llm_handle = os.environ.get("MODEL_TYPE", "AzureOpenAI")
         try:
-            if(llm_handle == "AzureOpenAI"): 
-                # Code to for calling LLMs
-                return call_api(messages)
-            elif(llm_handle == "LLamaAML"):
-                # Code to for calling SLMs
-                return 0
+            if llm_handle == "AzureOpenAI":
+                return get_chat_completion_from_env(messages)
+            elif llm_handle == "LLamaAML":
+                return "Unsupported or placeholder right now"
         except Exception as e:
             print(e)
             return "Sorry, I am not able to understand your query. Please try again."
