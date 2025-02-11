@@ -120,7 +120,7 @@ def env_based_chat_completion(messages):
     Decide which provider to use based on environment config in llm_settings.
     """
     provider = get_model_type()
-    if provider == "Ollama":
+    if provider.lower() == "ollama":
         return _call_ollama_api(messages)
     elif use_openai_api_key():
         return _call_openai_api(messages)
