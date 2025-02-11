@@ -14,6 +14,7 @@ from .llm_settings import (
     get_openai_config,
     get_azure_config,
     get_model_type,
+    get_ollama_config,
 )
 
 logger = get_glue_logger(__name__)
@@ -95,11 +96,36 @@ def _call_azure_api(messages):
     prediction = response.choices[0].message.content
     return prediction
 
+def _call_ollama_api(messages):
+    """
+    Specialized function for calling Ollama endpoint using environment-based config.
+    """
+    from llama_index.llms.ollama import Ollama
+    cfg = get_ollama_config()
+
+    chat_messages = dict_to_chat_messages(messages)
+
+    ollama_client = Ollama(
+        base_url=cfg["base_url"],
+        model=cfg["model_name"],
+        temperature=cfg["temperature"],
+    )
+
+    response = ollama_client.chat(chat_messages)
+    return response.message.content if response.message else ""
+
+
 def env_based_chat_completion(messages):
     """
     Decide which provider to use based on environment config in llm_settings.
     """
-    return _call_openai_api(messages) if use_openai_api_key() else _call_azure_api(messages)
+    provider = get_model_type()
+    if provider == "Ollama":
+        return _call_ollama_api(messages)
+    elif use_openai_api_key():
+        return _call_openai_api(messages)
+    else:
+        return _call_azure_api(messages)
 
 class LLMMgr:
 
