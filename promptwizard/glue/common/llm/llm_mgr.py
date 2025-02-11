@@ -65,7 +65,7 @@ def _call_azure_api(messages):
     prediction = response.choices[0].message.content
     return prediction
 
-def get_chat_completion_from_env(messages):
+def env_based_chat_completion(messages):
     """
     Decide which provider to use based on environment config in llm_settings.
     """
@@ -83,7 +83,7 @@ class LLMMgr:
         llm_handle = get_model_type()
         try:
             if llm_handle == "AzureOpenAI":
-                return get_chat_completion_from_env(messages)
+                return env_based_chat_completion(messages)
             elif llm_handle == "LLamaAML":
                 return "Some placeholder"
         except Exception as e:
