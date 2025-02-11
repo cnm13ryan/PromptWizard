@@ -83,6 +83,6 @@ def get_model_type() -> str:
     Returns the string describing the model type, default to 'AzureOpenAI'.
     e.g. 'AzureOpenAI', 'LLamaAML', etc.
     """
-    model_type = os.environ.get("MODEL_TYPE", "AzureOpenAI")
+    model_type = os.environ.get("MODEL_TYPE", "Ollama")
     debug_log(f"[get_model_type] model_type={model_type}")
     return model_type
