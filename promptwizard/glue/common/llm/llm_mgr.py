@@ -55,14 +55,19 @@ def _call_openai_api(messages):
     model_name = openai_cfg["model_name"]
     temp = openai_cfg["temperature"]
 
-    client = OpenAI(api_key=api_key)
-    response = client.chat.completions.create(
-        model=model_name,
-        messages=[{"role": m.role.value, "content": m.content} for m in chat_messages],
-        temperature=temp,
-    )
-    prediction = response.choices[0].message.content
-    return prediction
+    try:
+        client = OpenAI(api_key=api_key)
+        response = client.chat.completions.create(
+            model=model_name,
+            messages=[{"role": m.role.value, "content": m.content} for m in chat_messages],
+            temperature=temp,
+        )
+        prediction = response.choices[0].message.content
+        return prediction
+
+    except Exception as e:
+        logger.error(f"Error in _call_openai_api: {e}")
+        raise GlueLLMException("Error calling OpenAI API") from e
 
 def _call_azure_api(messages):
     """
