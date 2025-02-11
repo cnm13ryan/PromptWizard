@@ -1,55 +1,75 @@
-from typing import Dict
+from typing import Dict, List
 from llama_index.core.callbacks import CallbackManager, TokenCountingHandler
 from llama_index.core.llms import ChatMessage
 from llama_index.core.llms import LLM
-from tenacity import retry, stop_after_attempt, wait_fixed, wait_random
 from ..base_classes import LLMConfig
-from ..constants.str_literals import InstallLibs, OAILiterals, \
-    OAILiterals, LLMLiterals, LLMOutputTypes
+from ..constants.str_literals import InstallLibs, LLMLiterals, LLMOutputTypes
 from .llm_helper import get_token_counter
 from ..exceptions import GlueLLMException
 from ..utils.runtime_tasks import install_lib_if_missing
 from ..utils.logging import get_glue_logger
 from ..utils.runtime_tasks import str_to_class
 import os
+from .llm_settings import (
+    use_openai_api_key,
+    get_openai_config,
+    get_azure_config,
+    get_model_type,
+)
+
 logger = get_glue_logger(__name__)
 
 def _call_openai_api(messages):
+    """
+    Specialized function for calling an OpenAI-like endpoint using
+    environment-based config from llm_settings.
+    """
     from openai import OpenAI
-    client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+    openai_cfg = get_openai_config()
+
+    api_key = openai_cfg["api_key"]
+    model_name = openai_cfg["model_name"]
+    temp = openai_cfg["temperature"]
+
+    client = OpenAI(api_key=api_key)
     response = client.chat.completions.create(
-        model=os.environ["OPENAI_MODEL_NAME"],
+        model=model_name,
         messages=messages,
-        temperature=0.0,
+        temperature=temp,
     )
-    return response.choices[0].message.content
+    prediction = response.choices[0].message.content
+    return prediction
 
 def _call_azure_api(messages):
+    """
+    Specialized function for calling Azure OpenAI endpoint using
+    environment-based config from llm_settings.
+    """
     from openai import AzureOpenAI
     from azure.identity import get_bearer_token_provider, AzureCliCredential
+    azure_cfg = get_azure_config()
 
     token_provider = get_bearer_token_provider(
         AzureCliCredential(),
         "https://cognitiveservices.azure.com/.default"
     )
     client = AzureOpenAI(
-        api_version=os.environ["OPENAI_API_VERSION"],
-        azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
+        api_version=azure_cfg["api_version"],
+        azure_endpoint=azure_cfg["azure_endpoint"],
         azure_ad_token_provider=token_provider
     )
     response = client.chat.completions.create(
-        model=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],
+        model=azure_cfg["deployment_name"],
         messages=messages,
-        temperature=0.0,
+        temperature=azure_cfg["temperature"],
     )
-    return response.choices[0].message.content
+    prediction = response.choices[0].message.content
+    return prediction
 
 def get_chat_completion_from_env(messages):
     """
-    Returns LLM chat completion based on environment variables.
-    If USE_OPENAI_API_KEY=True, calls OpenAI. Otherwise calls Azure OpenAI.
+    Decide which provider to use based on environment config in llm_settings.
     """
-    use_openai_api_key = os.environ.get('USE_OPENAI_API_KEY', 'False')
     return _call_openai_api(messages) if use_openai_api_key == "True" else _call_azure_api(messages)
 
 class LLMMgr:
@@ -59,7 +79,7 @@ class LLMMgr:
 
     @staticmethod
     def chat_completion(messages: Dict) -> str:
-        llm_handle = os.environ.get("MODEL_TYPE", "AzureOpenAI")
+        llm_handle = get_model_type()
         try:
             if llm_handle == "AzureOpenAI":
                 return get_chat_completion_from_env(messages)
