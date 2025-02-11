@@ -9,7 +9,6 @@ from ..exceptions import GlueLLMException
 from ..utils.runtime_tasks import install_lib_if_missing
 from ..utils.logging import get_glue_logger
 from ..utils.runtime_tasks import str_to_class
-import os
 from .llm_settings import (
     use_openai_api_key,
     get_openai_config,
