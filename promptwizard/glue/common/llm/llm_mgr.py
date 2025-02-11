@@ -143,22 +143,16 @@ class LLMMgr:
                         )
                     callback_mgr = CallbackManager([token_counter])
                     token_counter.reset_counts()
-                    # ()
 
                 if azure_oai_model.model_type in [LLMOutputTypes.CHAT, LLMOutputTypes.COMPLETION]:
-                    # ()
                     llm_pool[azure_oai_model.unique_model_id] = \
                         AzureOpenAI(
-                            # use_azure_ad=az_llm_config.use_azure_ad,
                                     azure_ad_token_provider=az_token_provider,
-                                    # model=azure_oai_model.model_name_in_azure,
-                                    # deployment_name=azure_oai_model.deployment_name_in_azure,
                                     api_key=az_llm_config.api_key,
                                     azure_endpoint=az_llm_config.azure_endpoint,
                                     api_version=az_llm_config.api_version,
-                                    # callback_manager=callback_mgr
                                     )
-                    # ()
+
                 elif azure_oai_model.model_type == LLMOutputTypes.EMBEDDINGS:
                     llm_pool[azure_oai_model.unique_model_id] =\
                         AzureOpenAIEmbedding(use_azure_ad=az_llm_config.use_azure_ad,
