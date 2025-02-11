@@ -1,6 +1,6 @@
 from typing import Dict, List
 from llama_index.core.callbacks import CallbackManager, TokenCountingHandler
-from llama_index.core.llms import ChatMessage
+from llama_index.core.llms import ChatMessage, MessageRole
 from llama_index.core.llms import LLM
 from ..base_classes import LLMConfig
 from ..constants.str_literals import InstallLibs, LLMLiterals, LLMOutputTypes
@@ -18,6 +18,29 @@ from .llm_settings import (
 
 logger = get_glue_logger(__name__)
 
+def dict_to_chat_messages(messages_dict: Dict) -> List[ChatMessage]:
+    """
+    Convert a dictionary of messages (e.g. {"messages": [{"role": "user", "content": "..."}]})
+    into a list of ChatMessage objects from llama_index.
+    """
+    if "messages" not in messages_dict:
+        raise ValueError("Expected 'messages' key in the dictionary.")
+
+    chat_messages = []
+    for msg in messages_dict["messages"]:
+        role_str = msg.get("role", "user").lower()
+        if role_str == "assistant":
+            role = MessageRole.ASSISTANT
+        elif role_str == "system":
+            role = MessageRole.SYSTEM
+        else:
+            role = MessageRole.USER
+
+        # create ChatMessage
+        chat_msg = ChatMessage(role=role, content=msg.get("content", ""))
+        chat_messages.append(chat_msg)
+    return chat_messages
+
 def _call_openai_api(messages):
     """
     Specialized function for calling an OpenAI-like endpoint using
@@ -25,7 +48,9 @@ def _call_openai_api(messages):
     """
     from openai import OpenAI
     openai_cfg = get_openai_config()
-
+    
+    chat_messages = dict_to_chat_messages(messages)
+    
     api_key = openai_cfg["api_key"]
     model_name = openai_cfg["model_name"]
     temp = openai_cfg["temperature"]
@@ -33,7 +58,7 @@ def _call_openai_api(messages):
     client = OpenAI(api_key=api_key)
     response = client.chat.completions.create(
         model=model_name,
-        messages=messages,
+        messages=[{"role": m.role.value, "content": m.content} for m in chat_messages],
         temperature=temp,
     )
     prediction = response.choices[0].message.content
