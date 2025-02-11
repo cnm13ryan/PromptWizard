@@ -70,7 +70,7 @@ def get_chat_completion_from_env(messages):
     """
     Decide which provider to use based on environment config in llm_settings.
     """
-    return _call_openai_api(messages) if use_openai_api_key == "True" else _call_azure_api(messages)
+    return _call_openai_api(messages) if use_openai_api_key() else _call_azure_api(messages)
 
 class LLMMgr:
     def _handle_llm_error(e: Exception, provider_name: str, messages: Dict) -> str:
