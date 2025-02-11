@@ -327,6 +327,9 @@ paket-files/
 __pycache__/
 *.pyc
 
+# pyenv
+.python-version
+
 # Cake - Uncomment if you are using it
 # tools/**
 # !tools/packages.config
@@ -386,6 +389,18 @@ FodyWeavers.xsd
 
 # Local History for Visual Studio Code
 .history/
+
+# PromptWizard
+promptwizard.egg-info/
+
+# Environments
+.env/
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
 
 # Windows Installer files from build outputs
 *.cab
