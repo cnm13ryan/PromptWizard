@@ -53,6 +53,10 @@ def get_chat_completion_from_env(messages):
     return _call_openai_api(messages) if use_openai_api_key == "True" else _call_azure_api(messages)
 
 class LLMMgr:
+    def _handle_llm_error(e: Exception, provider_name: str, messages: Dict) -> str:
+        logger.error(f"Exception with {provider_name} on messages {messages}: {e}")
+        return "Sorry, I am not able to understand your query. Please try again."
+
     @staticmethod
     def chat_completion(messages: Dict) -> str:
         llm_handle = os.environ.get("MODEL_TYPE", "AzureOpenAI")
@@ -60,12 +64,9 @@ class LLMMgr:
             if llm_handle == "AzureOpenAI":
                 return get_chat_completion_from_env(messages)
             elif llm_handle == "LLamaAML":
-                return "Unsupported or placeholder right now"
+                return "Some placeholder"
         except Exception as e:
-            print(e)
-            return "Sorry, I am not able to understand your query. Please try again."
-            # raise GlueLLMException(f"Exception when calling {llm_handle.__class__.__name__} "
-            #                        f"LLM in chat mode, with message {messages} ", e)
+            return _handle_llm_error(e, llm_handle, messages)
         
 
     @staticmethod
